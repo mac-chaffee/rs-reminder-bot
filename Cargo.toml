@@ -1,0 +1,17 @@
+[package]
+name = "rs-reminder-bot"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+twilight-http = { version = "0.15" }
+twilight-model = { version = "0.15" }
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "signal"] }
+tracing-subscriber = "0.3"
+chrono = "0.4"
+tokio_schedule = "0.3"
+
+[target.x86_64-unknown-linux-musl]
+linker = "x86_64-linux-musl-gcc"
