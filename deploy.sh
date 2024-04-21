@@ -8,4 +8,5 @@ git clean -fd
 git fetch
 git reset --hard origin/main
 nix-shell -p cargo --command "cargo build --release"
+systemctl restart --user rs-reminder
 EOF
