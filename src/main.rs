@@ -21,7 +21,7 @@ static WEEKLY: &'static str = concat!(
 static MONTHLY: &'static str = ":bulb: All monthly Distractions & Diversions have reset!\nhttps://runescape.wiki/w/Repeatable_events#Monthly_events";
 static WILDERNESS: &'static str = ":bulb: A special Wilderness Flash Event is happening in 5 minutes!\nhttps://runescape.wiki/w/Wilderness_Flash_Events";
 static TREASURE_HUNT: &'static str = ":bulb: The weekly clan treasure hunt is happening in 5 minutes! Bring a spade to Edgeville on World 70 to be able to win a rare item!\nhttps://runescape.wiki/w/Treasure_chest_(Carnillean_Rising)";
-static PENGUIN_HUNT: &'static str = ":bulb: The weekly clan penguin hunt is happening in 5 minutes! Bring your penguin spy device to Edgeville on World 71! https://runescape.wiki/w/Penguin_Hide_and_Seek";
+static PENGUIN_HUNT: &'static str = ":bulb: The weekly clan penguin hunt is happening in 5 minutes! Bring your penguin spy device to Edgeville on World 71!\nhttps://runescape.wiki/w/Penguin_Hide_and_Seek";
 static CITADEL_RESET: &'static str = ":bulb: Our clan citadel's weekly reset just happened!\nhttps://runescape.wiki/w/Clan_Citadel";
 
 #[tokio::main]
