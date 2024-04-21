@@ -1,12 +1,20 @@
 # RS Reminder Bot
 
-This is a Discord bot that sends reminders about events in Runescape.
+This is a Discord bot that sends reminders about events in Runescape. Current reminders include:
+
+* Monthly D&D reset
+* Weekly D&D reset (including Thalmund)
+* Weekly clan events (Treasure Hunt and Penguin Hide and Deek)
+* Citadel reset
+* Wilderness Flash Events (only the Special ones)
+
+Note that the reminders are tailored specifically to me and not currently customizatable.
+
+## Design
 
 It uses the Discord REST API to send messages, thanks to the [twilight](https://github.com/twilight-rs/twilight) library.
 
 Uses less than 800KB of RAM and uses exactly zero CPU when idle.
-
-Note that the reminders are tailored specifically to me and not currently customizatable.
 
 ## Deployment - NixOS
 
