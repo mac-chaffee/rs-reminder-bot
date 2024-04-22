@@ -28,6 +28,18 @@ static CITADEL_RESET: &'static str = ":bulb: Our clan citadel's weekly reset jus
 async fn main() {
     tracing_subscriber::fmt::init();
 
+    let debug = match env::var("DEBUG") {
+        Ok(_) => true,
+        Err(_) => false,
+    };
+
+    if debug {
+        println!("Debug mode active");
+        let debug = every(1).minute()
+            .perform(|| async { send(WEEKLY).await });
+        spawn(debug);
+    }
+
     let weekly = every(1).week()
         .on(Weekday::Mon).at(00, 00, 00)
         .in_timezone(&Utc)
