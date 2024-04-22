@@ -19,7 +19,6 @@ systemd.user.services.rs-reminder = {
       ProtectSystem = "strict";
       PrivateDevices = true;
       PrivateUsers = true;
-      PrivateNetwork = true;
       ProtectClock = true;
       ProtectControlGroups = true;
       ProtectKernelLogs = true;
