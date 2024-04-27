@@ -1,68 +1,132 @@
-use poise::serenity_prelude as serenity;
+use std::env;
+use std::future::IntoFuture;
 
-// User data, which is stored and accessible in all command invocations
-struct Data {
-    database: sqlx::SqlitePool,
-}
-type Error = Box<dyn std::error::Error + Send + Sync>;
-type Context<'a> = poise::Context<'a, Data, Error>;
+use chrono::Datelike;
+// use chrono::TimeZone;
+use twilight_http::Client;
+use twilight_model::id::Id;
+use tokio::signal;
+use tokio::spawn;
+use tokio_schedule::{every, Job};
+use chrono::{Utc, Weekday};
 
-/// Displays your or another user's account creation date
-#[poise::command(slash_command)]
-async fn age(
-    ctx: Context<'_>,
-    #[description = "Selected user"] user: Option<serenity::User>,
-) -> Result<(), Error> {
-    let u = user.as_ref().unwrap_or_else(|| ctx.author());
-    let id = u.id.get() as i64;
-    sqlx::query!(
-            "INSERT INTO todo (task, user_id) VALUES (?, ?)",
-            "test",
-            id,
-        )
-        .execute(&ctx.data().database) // < Where the command will be executed
-        .await
-        .unwrap();
-    let response = format!("{}'s account was created at {}", u.name, u.created_at());
-    ctx.say(response).await?;
-    Ok(())
-}
+static WEEKLY: &'static str = concat!(
+    ":bulb: Today is Runescape's weekly reset!\n",
+    "Some useful activities include:\n",
+    "- Buying Necromancy supplies from Thalmund\n",
+    "- Playing Herby Werby\n",
+    "- Playing Tears of Guthix\n",
+    "- And more: https://runescape.wiki/w/Repeatable_events#Weekly_events"
+);
+static MONTHLY: &'static str = ":bulb: All monthly Distractions & Diversions have reset!\nhttps://runescape.wiki/w/Repeatable_events#Monthly_events";
+// static WILDERNESS: &'static str = ":bulb: A special Wilderness Flash Event is happening in 5 minutes!\nhttps://runescape.wiki/w/Wilderness_Flash_Events";
+static TREASURE_HUNT: &'static str = ":bulb: The weekly clan treasure hunt is happening in 5 minutes! Bring a spade to Edgeville on World 70 to be able to win a rare item!\nhttps://runescape.wiki/w/Treasure_chest_(Carnillean_Rising)";
+static PENGUIN_HUNT: &'static str = ":bulb: The weekly clan penguin hunt is happening in 5 minutes! Bring your penguin spy device to Edgeville on World 71!\nhttps://runescape.wiki/w/Penguin_Hide_and_Seek";
+static CITADEL_RESET: &'static str = ":bulb: Our clan citadel's weekly reset just happened!\nhttps://runescape.wiki/w/Clan_Citadel";
 
 #[tokio::main]
 async fn main() {
-    let token = std::env::var("DISCORD_TOKEN").expect("missing DISCORD_TOKEN");
-    // Initiate a connection to the database file, creating the file if required.
-    let database = sqlx::sqlite::SqlitePoolOptions::new()
-        .max_connections(5)
-        .connect_with(
-            sqlx::sqlite::SqliteConnectOptions::new()
-                .filename("database.sqlite")
-                .create_if_missing(true),
-        )
-        .await
-        .expect("Couldn't connect to database");
+    tracing_subscriber::fmt::init();
 
-    sqlx::migrate!("./migrations").run(&database).await.expect("Couldn't run database migrations");
+    let debug = match env::var("DEBUG") {
+        Ok(_) => true,
+        Err(_) => false,
+    };
 
-    // No intents since we only support slash commands
-    let intents = serenity::GatewayIntents::empty();
+    if debug {
+        println!("Debug mode active");
+        let debug = every(1).minute()
+            .perform(|| async { send(WEEKLY).await });
+        spawn(debug);
+    }
 
-    let framework = poise::Framework::builder()
-        .options(poise::FrameworkOptions {
-            commands: vec![age()],
-            ..Default::default()
-        })
-        .setup(|ctx, _ready, framework| {
-            Box::pin(async move {
-                poise::builtins::register_globally(ctx, &framework.options().commands).await?;
-                Ok(Data {database})
-            })
-        })
+    let weekly = every(1).week()
+        .on(Weekday::Wed).at(00, 01, 00)
+        .in_timezone(&Utc)
+        .perform(|| async { send(WEEKLY).await });
+    spawn(weekly);
+
+    let treasure = every(1).week()
+        .on(Weekday::Thu).at(00, 25, 00)
+        .in_timezone(&Utc)
+        .perform(|| async { send(TREASURE_HUNT).await });
+    spawn(treasure);
+
+    let penguin = every(1).week()
+        .on(Weekday::Fri).at(00, 25, 00)
+        .in_timezone(&Utc)
+        .perform(|| async { send(PENGUIN_HUNT).await });
+    spawn(penguin);
+
+    let citadel = every(1).week()
+        .on(Weekday::Sat).at(00, 30, 00)
+        .in_timezone(&Utc)
+        .perform(|| async { send(CITADEL_RESET).await });
+    spawn(citadel);
+
+    let monthly = every(1).day()
+        .at(00, 00, 00)
+        .in_timezone(&Utc)
+        .perform(|| async {
+            // Make sure this is the first day of the month
+            let now = Utc::now();
+            if now.day0() == 0 {
+                send(MONTHLY).await
+            }
+        });
+    spawn(monthly);
+
+    // let wildy = every(1).hour()
+    //     .at(55, 00)
+    //     .perform(|| async {
+    //         // Special events happen on specific rotations since a specific date
+    //         // and there are 14 events per rotation.
+    //         // Must subtract 2 from the wiki numbers due to 1-indexed arrays
+    //         // and the notification triggering 5 min before
+    //         let epoch = Utc.with_ymd_and_hms( 2024, 2, 5, 7, 0, 0).unwrap();
+    //         let rotations_since_epoch = (Utc::now() - epoch).num_hours();
+    //         if [1, 4, 8, 12].contains(&(rotations_since_epoch % 14)) {
+    //             send(WILDERNESS).await
+    //         }
+    //     });
+    // spawn(wildy);
+
+    let weekly = every(1).week()
+        .on(Weekday::Mon).at(00, 00, 00)
+        .in_timezone(&Utc)
+        .perform(|| async { send(WEEKLY).await });
+    spawn(weekly);
+    println!("Schedules have been initialized");
+
+    match signal::ctrl_c().await {
+        Ok(_) => {},
+        Err(err) => {
+            eprintln!("Unable to listen for shutdown signal: {}", err);
+        },
+    }
+}
+
+/// Creates a fresh client and sends a given message
+async fn send(message: &str) {
+    let token = env::var("DISCORD_TOKEN").unwrap();
+    let channel_str = env::var("DISCORD_CHANNEL_ID").unwrap();
+    let channel_id = Id::new(
+        u64::from_str_radix(channel_str.as_str(), 10).unwrap()
+    );
+
+    let client = Client::builder()
+        .token(token)
         .build();
 
-    let client = serenity::ClientBuilder::new(token, intents)
-        .framework(framework)
+
+    let result = client
+        .create_message(channel_id)
+        .content(message)
+        .unwrap()
+        .into_future()
         .await;
-    // client.unwrap().http.send_message(channel_id, files, map);
-    client.unwrap().start().await.unwrap();
+    match result {
+        Ok(_) => {},
+        Err(err) => eprintln!("Failed to send message: {}", err),
+    }
 }
