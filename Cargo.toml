@@ -13,4 +13,4 @@ tracing-subscriber = "0.3"
 chrono = "0.4"
 tokio_schedule = "0.3"
 # poise = "0.6"
-sqlx = { version = "0.7", features = [ "runtime-tokio", "sqlite" ] }
+# sqlx = { version = "0.7", features = [ "runtime-tokio", "sqlite" ] }
