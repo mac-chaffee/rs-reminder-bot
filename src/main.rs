@@ -8,9 +8,9 @@ use twilight_model::id::Id;
 use tokio::signal;
 use tokio::spawn;
 use tokio_schedule::{every, Job};
-use chrono::{Utc, Weekday};
+use chrono::{Utc, Weekday, Duration};
 
-static WEEKLY: &'static str = concat!(
+const WEEKLY: &'static str = concat!(
     ":bulb: Today is Runescape's weekly reset!\n",
     "Some useful activities include:\n",
     "- Buying Necromancy supplies from Thalmund\n",
@@ -18,11 +18,43 @@ static WEEKLY: &'static str = concat!(
     "- Playing Tears of Guthix\n",
     "- And more: https://runescape.wiki/w/Repeatable_events#Weekly_events"
 );
-static MONTHLY: &'static str = ":bulb: All monthly Distractions & Diversions have reset!\nhttps://runescape.wiki/w/Repeatable_events#Monthly_events";
-// static WILDERNESS: &'static str = ":bulb: A special Wilderness Flash Event is happening in 5 minutes!\nhttps://runescape.wiki/w/Wilderness_Flash_Events";
-static TREASURE_HUNT: &'static str = ":bulb: The weekly clan treasure hunt is happening in 5 minutes! Bring a spade to Edgeville on World 70 to be able to win a rare item!\nhttps://runescape.wiki/w/Treasure_chest_(Carnillean_Rising)";
-static PENGUIN_HUNT: &'static str = ":bulb: The weekly clan penguin hunt is happening in 5 minutes! Bring your penguin spy device to Edgeville on World 71!\nhttps://runescape.wiki/w/Penguin_Hide_and_Seek";
-static CITADEL_RESET: &'static str = ":bulb: Our clan citadel's weekly reset just happened!\nhttps://runescape.wiki/w/Clan_Citadel";
+const MONTHLY: &'static str = ":bulb: All monthly Distractions & Diversions will reset in 24 hours! Today's your last chance to do your monthlies!\nhttps://runescape.wiki/w/Repeatable_events#Monthly_events";
+const TREASURE_HUNT: &'static str = ":bulb: The weekly clan treasure hunt is happening in 5 minutes! Bring a spade to Edgeville on World 70 to be able to win a rare item!\nhttps://runescape.wiki/w/Treasure_chest_(Carnillean_Rising)";
+const PENGUIN_HUNT: &'static str = ":bulb: The weekly clan penguin hunt is happening in 5 minutes! Bring your penguin spy device to Edgeville on World 71!\nhttps://runescape.wiki/w/Penguin_Hide_and_Seek";
+const CITADEL_RESET: &'static str = ":bulb: Our clan citadel's weekly reset just happened!\nhttps://runescape.wiki/w/Clan_Citadel";
+
+const CLAN_MINIGAME_PREFIX: &'static str = ":bulb: Join us for a clan minigame event at 17:00 game time! We'll be in world 65 playing";
+
+// Source: https://runescape.wiki/w/Module:Rotations#L-477
+const CLAN_MINIGAME_NAMES: &'static [&'static str] = &[
+    "Pest Control",
+    "Soul Wars",
+    "Fist of Guthix",
+    "Barbarian Assault",
+    "Conquest",
+    "Fishing Trawler",
+    "The Great Orb Project",
+    "Flash Powder Factory",
+    "Castle Wars",
+    "Stealing Creation",
+    "Cabbage Facepunch Bonanza",
+    "Heist",
+    "Soul Wars",
+    "Barbarian Assault",
+    "Conquest",
+    "Fist of Guthix",
+    "Castle Wars",
+    "Pest Control",
+    "Soul Wars",
+    "Fishing Trawler",
+    "The Great Orb Project",
+    "Flash Powder Factory",
+    "Stealing Creation",
+    "Cabbage Facepunch Bonanza",
+    "Heist",
+    "Trouble Brewing",
+    "Castle Wars",
+];
 
 #[tokio::main]
 async fn main() {
@@ -68,31 +100,31 @@ async fn main() {
         .at(00, 00, 00)
         .in_timezone(&Utc)
         .perform(|| async {
-            // Make sure this is the first day of the month
+            // Make sure this is the last day of the month
             let now = Utc::now();
-            if now.day0() == 0 {
+            if (now + Duration::days(1)).day0() == 0 {
                 send(MONTHLY).await
             }
         });
     spawn(monthly);
 
-    // let wildy = every(1).hour()
-    //     .at(55, 00)
-    //     .perform(|| async {
-    //         // Special events happen on specific rotations since a specific date
-    //         // and there are 14 events per rotation.
-    //         // Must subtract 2 from the wiki numbers due to 1-indexed arrays
-    //         // and the notification triggering 5 min before
-    //         let epoch = Utc.with_ymd_and_hms( 2024, 2, 5, 7, 0, 0).unwrap();
-    //         let rotations_since_epoch = (Utc::now() - epoch).num_hours();
-    //         if [1, 4, 8, 12].contains(&(rotations_since_epoch % 14)) {
-    //             send(WILDERNESS).await
-    //         }
-    //     });
-    // spawn(wildy);
+    let minigame = every(1).day()
+        .at(18, 45, 00)
+        .perform(|| async {
+            let now = Utc::now();
+            if now.weekday() != Weekday::Sun {
+                return;
+            }
+            let index = get_current_minigame(now.timestamp());
+            let game = CLAN_MINIGAME_NAMES[index];
+            let game_link = format!("https://runescape.wiki/w/{}", game.replace(" ", "_"));
+            let msg = format!("{} {}!\n{}", CLAN_MINIGAME_PREFIX, game, game_link);
+            send(msg.as_str()).await;
+        });
+    spawn(minigame);
 
     let weekly = every(1).week()
-        .on(Weekday::Mon).at(00, 00, 00)
+        .on(Weekday::Wed).at(00, 01, 00)
         .in_timezone(&Utc)
         .perform(|| async { send(WEEKLY).await });
     spawn(weekly);
@@ -128,5 +160,37 @@ async fn send(message: &str) {
     match result {
         Ok(_) => {},
         Err(err) => eprintln!("Failed to send message: {}", err),
+    }
+}
+
+/// Spotlighted minigames change every 3-days since the Unix Epoch
+/// but the rotations require a hardcoded offset to get correct results
+fn get_current_minigame(timestamp: i64) -> usize {
+    const OFFSET: i64 = 49;
+    let rotations_since_epoch = (timestamp / 60 / 60 / 24 - OFFSET) / 3;
+    let rotations = usize::try_from(rotations_since_epoch).unwrap();
+    let rotation_index = rotations % CLAN_MINIGAME_NAMES.len();
+    return rotation_index;
+}
+
+#[cfg(test)]
+mod tests {
+    use chrono::{TimeZone, Utc};
+
+    use crate::get_current_minigame;
+
+    #[test]
+    fn test_get_current_minigame() {
+        let cabbage = Utc.with_ymd_and_hms(2024, 4, 30, 6, 0, 0).unwrap();
+        assert_eq!(get_current_minigame(cabbage.timestamp()), 10);
+        let heist = Utc.with_ymd_and_hms(2024, 5, 3, 6, 0, 0).unwrap();
+        assert_eq!(get_current_minigame(heist.timestamp()), 11);
+        let soul = Utc.with_ymd_and_hms(2024, 5, 6, 6, 0, 0).unwrap();
+        assert_eq!(get_current_minigame(soul.timestamp()), 12);
+        // ...
+        let castle = Utc.with_ymd_and_hms(2024, 6, 17, 6, 0, 0).unwrap();
+        assert_eq!(get_current_minigame(castle.timestamp()), 26);
+        let pest = Utc.with_ymd_and_hms(2024, 6, 20, 6, 0, 0).unwrap();
+        assert_eq!(get_current_minigame(pest.timestamp()), 0);
     }
 }
