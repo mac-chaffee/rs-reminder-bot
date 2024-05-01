@@ -3,10 +3,10 @@
 This is a Discord bot that sends reminders about events in Runescape. Current reminders include:
 
 * Monthly D&D reset
-* Weekly D&D reset (including Thalmund)
-* Weekly clan events (Treasure Hunt and Penguin Hide and Deek)
+* Weekly D&D reset
+* Weekly clan events (Treasure Hunt, Penguin Hide and Seek, Minigame Spotlight)
 * Citadel reset
-* Wilderness Flash Events (only the Special ones)
+* Raven spawns
 
 Note that the reminders are tailored specifically to me and not currently customizatable.
 
