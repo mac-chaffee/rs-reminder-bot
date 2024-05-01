@@ -23,7 +23,7 @@ const TREASURE_HUNT: &'static str = ":bulb: The weekly clan treasure hunt is hap
 const PENGUIN_HUNT: &'static str = ":bulb: The weekly clan penguin hunt is happening in 5 minutes! Bring your penguin spy device to Edgeville on World 71!\nhttps://runescape.wiki/w/Penguin_Hide_and_Seek";
 const CITADEL_RESET: &'static str = ":bulb: Our clan citadel's weekly reset just happened!\nhttps://runescape.wiki/w/Clan_Citadel";
 
-const CLAN_MINIGAME_PREFIX: &'static str = ":bulb: Join us for a clan minigame event at 17:00 game time! We'll be in world 65 playing";
+const CLAN_MINIGAME_PREFIX: &'static str = ":bulb: Join us for a clan minigame event at 19:00 game time! We'll be in world 65 playing";
 
 // Source: https://runescape.wiki/w/Module:Rotations#L-477
 const CLAN_MINIGAME_NAMES: &'static [&'static str] = &[
