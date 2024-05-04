@@ -91,7 +91,7 @@ async fn main() {
     spawn(penguin);
 
     let citadel = every(1).week()
-        .on(Weekday::Sat).at(00, 30, 00)
+        .on(Weekday::Sun).at(00, 30, 00)
         .in_timezone(&Utc)
         .perform(|| async { send(CITADEL_RESET).await });
     spawn(citadel);
