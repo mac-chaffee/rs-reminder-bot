@@ -126,9 +126,7 @@ async fn main() {
                 return;
             }
             let index = get_current_minigame(now.timestamp());
-            // let game = CLAN_MINIGAME_NAMES[index];
-            println!("Real minigame: {}", CLAN_MINIGAME_NAMES[index]);
-            let game = "Soul Wars";
+            let game = CLAN_MINIGAME_NAMES[index];
             let game_link = format!("https://runescape.wiki/w/{}", game.replace(" ", "_"));
             let msg = format!("{} {}!\n{}", CLAN_MINIGAME_PREFIX, game, game_link);
             send(msg.as_str()).await;
