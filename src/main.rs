@@ -205,7 +205,7 @@ mod tests {
         assert_eq!(get_current_minigame(heist.timestamp()), 11);
         let soul = Utc.with_ymd_and_hms(2024, 5, 6, 6, 0, 0).unwrap();
         assert_eq!(get_current_minigame(soul.timestamp()), 12);
-        let conquest = Utc.with_ymd_and_hms(2024, 5, 12, 17, 0, 0).unwrap();
+        let conquest = Utc.with_ymd_and_hms(2024, 5, 12, 19, 0, 0).unwrap();
         assert_eq!(get_current_minigame(conquest.timestamp()), 14);
         // ...
         let castle = Utc.with_ymd_and_hms(2024, 6, 17, 6, 0, 0).unwrap();
