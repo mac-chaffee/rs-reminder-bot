@@ -133,11 +133,6 @@ async fn main() {
         });
     spawn(minigame);
 
-    let weekly = every(1).week()
-        .on(Weekday::Wed).at(00, 01, 00)
-        .in_timezone(&Utc)
-        .perform(|| async { send(WEEKLY).await });
-    spawn(weekly);
     println!("Schedules have been initialized");
 
     match signal::ctrl_c().await {
