@@ -1,7 +1,7 @@
 systemd.user.services.rs-reminder = {
   enable = true;
   after = [ "network.target" ];
-  wantedBy = [ "multi-user.target" ];
+  wantedBy = [ "default.target" ];
   description = "RS Reminder Bot";
   serviceConfig = {
       Type = "simple";
