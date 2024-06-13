@@ -19,8 +19,8 @@ const WEEKLY: &'static str = concat!(
     "- And more: https://runescape.wiki/w/Repeatable_events#Weekly_events"
 );
 const MONTHLY: &'static str = ":bulb: All monthly Distractions & Diversions will reset in 24 hours! Today's your last chance to do your monthlies!\nhttps://runescape.wiki/w/Repeatable_events#Monthly_events";
-const TREASURE_HUNT: &'static str = ":bulb: The weekly clan treasure hunt is happening in 5 minutes! Bring a spade to Edgeville on World 70 to be able to win a rare item!\nhttps://runescape.wiki/w/Treasure_chest_(Carnillean_Rising)";
-const PENGUIN_HUNT: &'static str = ":bulb: The weekly clan penguin hunt is happening in 5 minutes! Bring your penguin spy device to Edgeville on World 71!\nhttps://runescape.wiki/w/Penguin_Hide_and_Seek";
+const TREASURE_HUNT: &'static str = ":bulb: The weekly clan treasure hunt is happening in 15 minutes! Bring a spade to Edgeville on World 70 to be able to win a rare item!\nhttps://runescape.wiki/w/Treasure_chest_(Carnillean_Rising)";
+const PENGUIN_HUNT: &'static str = ":bulb: The weekly clan penguin hunt is happening in 15 minutes! Bring your penguin spy device to Edgeville on World 71!\nhttps://runescape.wiki/w/Penguin_Hide_and_Seek";
 const CITADEL_RESET: &'static str = ":bulb: Our clan citadel's weekly reset just happened!\nhttps://runescape.wiki/w/Clan_Citadel";
 const RAVEN: &'static str = ":bulb: A raven has spawned somewhere in Prifddinas today. Spot it to unlock a title! More info on spawn locations can be found here: https://runescape.wiki/w/Raven_(Prifddinas)";
 const CLAN_MINIGAME_PREFIX: &'static str = ":bulb: Join us for a clan minigame event at 19:00 game time! We'll be in world 65 playing";
@@ -79,13 +79,13 @@ async fn main() {
     spawn(weekly);
 
     let treasure = every(1).week()
-        .on(Weekday::Thu).at(00, 25, 00)
+        .on(Weekday::Thu).at(00, 15, 00)
         .in_timezone(&Utc)
         .perform(|| async { send(TREASURE_HUNT).await });
     spawn(treasure);
 
     let penguin = every(1).week()
-        .on(Weekday::Fri).at(00, 25, 00)
+        .on(Weekday::Fri).at(00, 15, 00)
         .in_timezone(&Utc)
         .perform(|| async { send(PENGUIN_HUNT).await });
     spawn(penguin);
