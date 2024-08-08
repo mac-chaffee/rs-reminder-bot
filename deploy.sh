@@ -7,7 +7,7 @@ cd /home/mac/rs-reminder-bot
 git clean -fd
 git fetch
 git reset --hard origin/main
-nix-shell -p cargo --command "cargo build --release"
-systemctl restart --user rs-reminder
-systemctl status --user rs-reminder
+nix-build default.nix
 EOF
+# User units didn't work, so you have to SSH in afterward and run:
+# sudo systemctl restart rs-reminder
