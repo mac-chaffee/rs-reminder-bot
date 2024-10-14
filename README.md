@@ -27,4 +27,4 @@ First add the contents of systemd-service.nix to `/etc/nixos/configuration.nix`
 
 ## Disclaimer
 
-This code is not designed to be re-used or repurposed for in any serious context.
+This code is not designed to be re-used or repurposed for any serious context.

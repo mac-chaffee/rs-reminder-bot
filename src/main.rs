@@ -23,38 +23,6 @@ const TREASURE_HUNT: &'static str = ":bulb: The weekly clan treasure hunt is hap
 const PENGUIN_HUNT: &'static str = ":bulb: The weekly clan penguin hunt is happening in 15 minutes! Bring your penguin spy device to Edgeville on World 71!\nhttps://runescape.wiki/w/Penguin_Hide_and_Seek";
 const CITADEL_RESET: &'static str = ":bulb: Our clan citadel's weekly reset just happened!\nhttps://runescape.wiki/w/Clan_Citadel";
 const RAVEN: &'static str = ":bulb: A raven has spawned somewhere in Prifddinas today. Spot it to unlock a title! More info on spawn locations can be found here: https://runescape.wiki/w/Raven_(Prifddinas)";
-const CLAN_MINIGAME_PREFIX: &'static str = ":bulb: Join us for a clan minigame event at 19:00 game time! We'll be in world 65 playing";
-
-// Source: https://runescape.wiki/w/Module:Rotations#L-477
-const CLAN_MINIGAME_NAMES: &'static [&'static str] = &[
-    "Pest Control",
-    "Soul Wars",
-    "Fist of Guthix",
-    "Barbarian Assault",
-    "Conquest",
-    "Fishing Trawler",
-    "The Great Orb Project",
-    "Flash Powder Factory",
-    "Castle Wars",
-    "Stealing Creation",
-    "Cabbage Facepunch Bonanza",
-    "Heist",
-    "Soul Wars",
-    "Barbarian Assault",
-    "Conquest",
-    "Fist of Guthix",
-    "Castle Wars",
-    "Pest Control",
-    "Soul Wars",
-    "Fishing Trawler",
-    "The Great Orb Project",
-    "Flash Powder Factory",
-    "Stealing Creation",
-    "Cabbage Facepunch Bonanza",
-    "Heist",
-    "Trouble Brewing",
-    "Castle Wars",
-];
 
 #[tokio::main]
 async fn main() {
@@ -118,21 +86,6 @@ async fn main() {
         });
     spawn(monthly);
 
-    let minigame = every(1).day()
-        .at(18, 45, 00)
-        .perform(|| async {
-            let now = Utc::now();
-            if now.weekday() != Weekday::Sun {
-                return;
-            }
-            let index = get_current_minigame(now.timestamp());
-            let game = CLAN_MINIGAME_NAMES[index];
-            let game_link = format!("https://runescape.wiki/w/{}", game.replace(" ", "_"));
-            let msg = format!("{} {}!\n{}", CLAN_MINIGAME_PREFIX, game, game_link);
-            send(msg.as_str()).await;
-        });
-    spawn(minigame);
-
     println!("Schedules have been initialized");
 
     match signal::ctrl_c().await {
@@ -168,16 +121,6 @@ async fn send(message: &str) {
     }
 }
 
-/// Spotlighted minigames change every 3-days since the Unix Epoch
-/// but the rotations require a hardcoded offset to get correct results
-fn get_current_minigame(timestamp: i64) -> usize {
-    const OFFSET: i64 = 49;
-    let rotations_since_epoch = (timestamp / 60 / 60 / 24 - OFFSET) / 3;
-    let rotations = usize::try_from(rotations_since_epoch).unwrap();
-    let rotation_index = rotations % CLAN_MINIGAME_NAMES.len();
-    return rotation_index;
-}
-
 /// Ravens spawn every 13 days since the Unix Epoch
 /// but the rotations require a hardcoded offset to get correct results
 fn is_raven_spawned(timestamp: i64) -> bool {
@@ -190,26 +133,9 @@ fn is_raven_spawned(timestamp: i64) -> bool {
 mod tests {
     use chrono::{TimeZone, Utc};
 
-    use crate::{get_current_minigame, is_raven_spawned};
+    use crate::is_raven_spawned;
 
     #[test]
-    fn test_get_current_minigame() {
-        let cabbage = Utc.with_ymd_and_hms(2024, 4, 30, 6, 0, 0).unwrap();
-        assert_eq!(get_current_minigame(cabbage.timestamp()), 10);
-        let heist = Utc.with_ymd_and_hms(2024, 5, 3, 6, 0, 0).unwrap();
-        assert_eq!(get_current_minigame(heist.timestamp()), 11);
-        let soul = Utc.with_ymd_and_hms(2024, 5, 6, 6, 0, 0).unwrap();
-        assert_eq!(get_current_minigame(soul.timestamp()), 12);
-        let conquest = Utc.with_ymd_and_hms(2024, 5, 12, 19, 0, 0).unwrap();
-        assert_eq!(get_current_minigame(conquest.timestamp()), 14);
-        // ...
-        let castle = Utc.with_ymd_and_hms(2024, 6, 17, 6, 0, 0).unwrap();
-        assert_eq!(get_current_minigame(castle.timestamp()), 26);
-        let pest = Utc.with_ymd_and_hms(2024, 6, 20, 6, 0, 0).unwrap();
-        assert_eq!(get_current_minigame(pest.timestamp()), 0);
-    }
-
-        #[test]
     fn test_is_raven_spawned() {
         let first_day = Utc.with_ymd_and_hms(2014, 10, 4, 6, 0, 0).unwrap();
         assert!(is_raven_spawned(first_day.timestamp()));
